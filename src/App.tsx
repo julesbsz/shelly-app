@@ -7,8 +7,7 @@ function App() {
 	const { toast } = useToast();
 
 	const [loading, setLoading] = useState(false);
-	const [settings, setSettings] = useState(null);
-	const [status, setStatus] = useState(null);
+	const [data, setData] = useState(null);
 
 	const displayToast = (message: string) => {
 		toast({
@@ -18,40 +17,49 @@ function App() {
 		});
 	};
 
+	const getDeviceData = async () => {
+		setLoading(true);
+		await fetch("https://shelly-86-eu.shelly.cloud/device/status?id=80646F827174&auth_key=MWRmYzM2dWlkE62C6C4C76F817CE0A3D2902F5B5D4C115E49B28CF8539114D9246505DE5D368D560D06020A92480")
+			.then((res) => {
+				res.json().then((data) => {
+					console.log("data:", data);
+					setData(data);
+				});
+			})
+			.catch(() => {
+				setLoading(false);
+				displayToast("An error occurred while fetching device data, please try again later.");
+			});
+
+		setLoading(false);
+	};
+
+	const initWSS = () => {
+		console.log("initWSS");
+		try {
+			const ws = (new WebSocket("wss://shelly-86-eu.shelly.cloud:6113/shelly/wss/hk_sock?t=MWRmYzM2dWlkE62C6C4C76F817CE0A3D2902F5B5D4C115E49B28CF8539114D9246505DE5D368D560D06020A92480").onerror = (e) => {
+				console.log("ws error:", e);
+			});
+			// ws.onopen = () => {
+			// 	console.log("ws opened");
+			// };
+			// ws.onmessage = (e) => {
+			// 	console.log("ws message:", e);
+			// };
+			// ws.onclose = () => {
+			// 	console.log("ws closed");
+			// };
+		} catch (e) {
+			console.log("ws error:", e);
+		}
+	};
+
 	useEffect(() => {
-		const getDeviceData = async () => {
-			setLoading(true);
-			await fetch("http://192.168.1.100/status")
-				.then((res) => {
-					res.json().then((data) => {
-						console.log("status:", data);
-						setStatus(data);
-					});
-				})
-				.catch((error) => {
-					setLoading(false);
-					displayToast("An error occurred while fetching device data, please try again later.");
-				});
-
-			await fetch("http://192.168.1.100/settings")
-				.then((res) => {
-					res.json().then((data) => {
-						console.log("settings:", data);
-						setSettings(data);
-					});
-				})
-				.catch((error) => {
-					setLoading(false);
-					displayToast("An error occurred while fetching device data, please try again later.");
-				});
-
-			setLoading(false);
-		};
-
 		getDeviceData();
+		// initWSS();
 	}, []);
 
-	return <>{loading ? <p>loading device data...</p> : status && settings ? <DeviceDataComponent status={status} settings={settings} /> : <p>no data</p>}</>;
+	return <>{loading ? <p>loading device data...</p> : data ? <DeviceDataComponent data={data} /> : <p>no data</p>}</>;
 }
 
 export default App;

@@ -1,35 +1,57 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
+import DeviceDataComponent from "./components/DeviceData";
+import { useToast } from "@/components/ui/use-toast";
 
 function App() {
-  const [count, setCount] = useState(0)
+	const { toast } = useToast();
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+	const [loading, setLoading] = useState(false);
+	const [settings, setSettings] = useState(null);
+	const [status, setStatus] = useState(null);
+
+	const displayToast = (message: string) => {
+		toast({
+			title: "Unable to fetch device data.",
+			description: message,
+			duration: 5000,
+		});
+	};
+
+	useEffect(() => {
+		const getDeviceData = async () => {
+			setLoading(true);
+			await fetch("http://192.168.1.100/status")
+				.then((res) => {
+					res.json().then((data) => {
+						console.log("status:", data);
+						setStatus(data);
+					});
+				})
+				.catch((error) => {
+					setLoading(false);
+					displayToast("An error occurred while fetching device data, please try again later.");
+				});
+
+			await fetch("http://192.168.1.100/settings")
+				.then((res) => {
+					res.json().then((data) => {
+						console.log("settings:", data);
+						setSettings(data);
+					});
+				})
+				.catch((error) => {
+					setLoading(false);
+					displayToast("An error occurred while fetching device data, please try again later.");
+				});
+
+			setLoading(false);
+		};
+
+		getDeviceData();
+	}, []);
+
+	return <>{loading ? <p>loading device data...</p> : status && settings ? <DeviceDataComponent status={status} settings={settings} /> : <p>no data</p>}</>;
 }
 
-export default App
+export default App;

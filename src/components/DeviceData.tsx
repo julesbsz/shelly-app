@@ -2,29 +2,33 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 function DeviceDataComponent({ data }) {
+	const [status, setStatus] = useState(false);
+
 	useEffect(() => {
 		console.log("data (component):", data);
-		console.log(data["data"]["device_status"]["relays"][0]["ison"]);
+		console.log("state:", data["data"]["device_status"]["relays"][0]["ison"]);
+		setStatus(data["data"]["device_status"]["relays"][0]["ison"]);
 	}, [data]);
 
-	const handleSwitchChange = (e) => {
-		if (e) {
-			console.log("switch on");
-			fetch("https://shelly-86-eu.shelly.cloud/device/relay/control?channel=0&turn=on&id=80646F827174&auth_key=MWRmYzM2dWlkE62C6C4C76F817CE0A3D2902F5B5D4C115E49B28CF8539114D9246505DE5D368D560D06020A92480").then((res) => {
+	const handleSwitchChange = () => {
+		setStatus(!status);
+
+		if (status) {
+			console.log("switching on");
+			fetch("https://shelly-77-eu.shelly.cloud/device/relay/control?channel=0&turn=on&id=4022d88e30e8&auth_key=MWNiMjY5dWlk404459961993DCA83AE44BC6E3A6F58906952E7BECA0A5B69DC375C964915ACBC0EA536A0639CB73").then((res) => {
 				res.json().then((data) => {
 					console.log("data:", data);
 					if (!data["isok"]) {
 						console.log("unable to switch on");
-						// turn switch off
 					}
 				});
 			});
 		} else {
-			console.log("switch off");
-			fetch("https://shelly-86-eu.shelly.cloud/device/relay/control?channel=0&turn=off&id=80646F827174&auth_key=MWRmYzM2dWlkE62C6C4C76F817CE0A3D2902F5B5D4C115E49B28CF8539114D9246505DE5D368D560D06020A92480").then((res) => {
+			console.log("switching off");
+			fetch("https://shelly-77-eu.shelly.cloud/device/relay/control?channel=0&turn=off&id=4022d88e30e8&auth_key=MWNiMjY5dWlk404459961993DCA83AE44BC6E3A6F58906952E7BECA0A5B69DC375C964915ACBC0EA536A0639CB73").then((res) => {
 				res.json().then((data) => {
 					console.log("data:", data);
 				});
@@ -39,9 +43,12 @@ function DeviceDataComponent({ data }) {
 				<CardDescription>id: {data["data"]["device_status"]["mac"]}</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<Switch value={data["data"]["device_status"]["relays"][0]["ison"]} className="mb-5" onCheckedChange={handleSwitchChange} />
+				<p>Status: {status ? "on" : "off"}</p>
 				<p>temperature: {data["data"]["device_status"]["temperature"]}</p>
 			</CardContent>
+			<CardFooter>
+				<button onClick={handleSwitchChange}>switch {status ? "off" : "on"}</button>
+			</CardFooter>
 		</Card>
 	);
 }

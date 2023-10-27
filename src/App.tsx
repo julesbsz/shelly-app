@@ -7,8 +7,7 @@ function App() {
 	const { toast } = useToast();
 
 	const [loading, setLoading] = useState(false);
-	const [settings, setSettings] = useState(null);
-	const [status, setStatus] = useState(null);
+	const [data, setData] = useState(null);
 
 	const displayToast = (message: string) => {
 		toast({
@@ -18,40 +17,28 @@ function App() {
 		});
 	};
 
+	const getDeviceData = async () => {
+		setLoading(true);
+		await fetch("https://shelly-77-eu.shelly.cloud/device/status?id=4022d88e30e8&auth_key=MWNiMjY5dWlk404459961993DCA83AE44BC6E3A6F58906952E7BECA0A5B69DC375C964915ACBC0EA536A0639CB73")
+			.then((res) => {
+				res.json().then((data) => {
+					console.log("data:", data);
+					setData(data);
+				});
+			})
+			.catch(() => {
+				setLoading(false);
+				displayToast("An error occurred while fetching device data, please try again later.");
+			});
+
+		setLoading(false);
+	};
+
 	useEffect(() => {
-		const getDeviceData = async () => {
-			setLoading(true);
-			await fetch("http://192.168.1.100/status")
-				.then((res) => {
-					res.json().then((data) => {
-						console.log("status:", data);
-						setStatus(data);
-					});
-				})
-				.catch((error) => {
-					setLoading(false);
-					displayToast("An error occurred while fetching device data, please try again later.");
-				});
-
-			await fetch("http://192.168.1.100/settings")
-				.then((res) => {
-					res.json().then((data) => {
-						console.log("settings:", data);
-						setSettings(data);
-					});
-				})
-				.catch((error) => {
-					setLoading(false);
-					displayToast("An error occurred while fetching device data, please try again later.");
-				});
-
-			setLoading(false);
-		};
-
 		getDeviceData();
 	}, []);
 
-	return <>{loading ? <p>loading device data...</p> : status && settings ? <DeviceDataComponent status={status} settings={settings} /> : <p>no data</p>}</>;
+	return <>{loading ? <p>loading device data...</p> : data ? <DeviceDataComponent data={data} /> : <p>no data</p>}</>;
 }
 
 export default App;
